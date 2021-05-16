@@ -39,4 +39,5 @@ public class HttpTriggerFunction {
 				       .body("Hello: " + name).build();
 		}
 	}
+
 }
