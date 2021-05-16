@@ -11,29 +11,32 @@ import java.util.Optional;
  * Azure Functions with HTTP Trigger.
  */
 public class HttpTriggerFunction {
-    /**
-     * This function listens at endpoint "/api/HttpExample". Two ways to invoke it using "curl" command in bash:
-     * 1. curl -d "HTTP Body" {your host}/api/HttpExample
-     * 2. curl "{your host}/api/HttpExample?name=HTTP%20Query"
-     */
-    @FunctionName("HttpExample")
-    public HttpResponseMessage run(
-            @HttpTrigger(
-                name = "req",
-                methods = {HttpMethod.GET, HttpMethod.POST},
-                authLevel = AuthorizationLevel.ANONYMOUS)
-                HttpRequestMessage<Optional<String>> request,
-            final ExecutionContext context) {
-        context.getLogger().info("Java HTTP trigger processed a request.");
+	/**
+	 * This function listens at endpoint "/api/HttpExample". Two ways to invoke it using "curl" command in bash:
+	 * 1. curl -d "HTTP Body" {your host}/api/HttpExample
+	 * 2. curl "{your host}/api/HttpExample?name=HTTP%20Query"
+	 */
+	@FunctionName("HttpExample")
+	public HttpResponseMessage run(
+		@HttpTrigger(
+			name = "req",
+			methods = {HttpMethod.GET, HttpMethod.POST},
+			authLevel = AuthorizationLevel.ANONYMOUS)
+			HttpRequestMessage<Optional<String>> request,
+		final ExecutionContext context) {
+		context.getLogger().info("Java HTTP trigger processed a request.");
 
-        // Parse query parameter
-        final String query = request.getQueryParameters().get("name");
-        final String name = request.getBody().orElse(query);
+		// Parse query parameter
+		final String query = request.getQueryParameters().get("name");
+		final Optional<String> body = request.getBody();
+		final String name = body.orElse(query);
 
-        if (name == null) {
-            return request.createResponseBuilder(HttpStatus.BAD_REQUEST).body("Please pass a name on the query string or in the request body").build();
-        } else {
-            return request.createResponseBuilder(HttpStatus.OK).body("Hello, " + name).build();
-        }
-    }
+		if (name == null) {
+			return request.createResponseBuilder(HttpStatus.BAD_REQUEST)
+				       .body("Please pass a name on the query string or in the request body").build();
+		} else {
+			return request.createResponseBuilder(HttpStatus.OK)
+				       .body("Hello: " + name).build();
+		}
+	}
 }
