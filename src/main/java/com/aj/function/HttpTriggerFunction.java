@@ -2,6 +2,7 @@ package com.aj.function;
 
 import com.microsoft.azure.functions.*;
 import com.microsoft.azure.functions.annotation.AuthorizationLevel;
+import com.microsoft.azure.functions.annotation.CosmosDBInput;
 import com.microsoft.azure.functions.annotation.FunctionName;
 import com.microsoft.azure.functions.annotation.HttpTrigger;
 
@@ -16,27 +17,27 @@ public class HttpTriggerFunction {
 	 * 1. curl -d "HTTP Body" {your host}/api/HttpExample
 	 * 2. curl "{your host}/api/HttpExample?name=HTTP%20Query"
 	 */
-	@FunctionName("HttpExample")
+	@FunctionName("HttpExampleWithCosmosDBInput")
 	public HttpResponseMessage run(
 		@HttpTrigger(
 			name = "req",
 			methods = {HttpMethod.GET, HttpMethod.POST},
 			authLevel = AuthorizationLevel.ANONYMOUS)
 			HttpRequestMessage<Optional<String>> request,
-		final ExecutionContext context) {
+		final ExecutionContext context,
+		@CosmosDBInput(
+			name = "input", databaseName = "dummy", collectionName = "dummy",
+			id = "{Query.id}",
+			partitionKey = "{Query.partitionKeyValue}",
+			connectionStringSetting = "AzureCosmosDBConnection") Optional<String> item) {
 		context.getLogger().info("Java HTTP trigger processed a request.");
 
-		// Parse query parameter
-		final String query = request.getQueryParameters().get("name");
-		final Optional<String> body = request.getBody();
-		final String name = body.orElse(query);
-
-		if (name == null) {
+		if (!item.isPresent()) {
 			return request.createResponseBuilder(HttpStatus.BAD_REQUEST)
-				       .body("Please pass a name on the query string or in the request body").build();
+				       .body("No Document Present!").build();
 		} else {
 			return request.createResponseBuilder(HttpStatus.OK)
-				       .body("Hello: " + name).build();
+				       .body("Hello: " + item.get()).build();
 		}
 	}
 
